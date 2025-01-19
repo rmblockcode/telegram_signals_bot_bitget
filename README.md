@@ -41,20 +41,23 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. Configurar variables de entorno:
-Crear un archivo `.env` con las siguientes variables:
-```env
-# Telegram Credentials
+## Variables de Entorno
+
+El proyecto utiliza python-dotenv para manejar las variables de entorno. Crea un archivo `.env` en la raíz del proyecto con el siguiente formato:
+
+```bash
 export TELEGRAM_API_ID=<tu-api-id>
 export TELEGRAM_API_HASH=<tu-api-hash>
 export TELEGRAM_PHONE_NUMER=<tu-numero-telefono>
 export TELEGRAM_CHANNEL_ID=<id-del-canal>
-
-# Bitget API Credentials
 export BG_API_KEY=<tu-api-key>
 export BG_SECRET_KEY=<tu-secret-key>
 export BG_PASSPHRASE=<tu-passphrase>
 ```
+
+> Nota: El prefijo `export` es opcional pero recomendado ya que permite usar el mismo archivo tanto con python-dotenv como con el comando `source` en sistemas Unix/Linux/macOS.
+
+Las variables se cargarán automáticamente al ejecutar el script.
 
 ## Configuración
 
@@ -66,10 +69,7 @@ En el archivo `main.py` puedes ajustar los siguientes parámetros:
 
 ## Uso
 
-1. Asegúrate de tener las variables de entorno configuradas:
-```bash
-source .env
-```
+1. Asegúrate de tener las variables de entorno configuradas.
 
 2. Ejecutar el bot:
 ```bash
@@ -105,6 +105,17 @@ SEÑAL EXCLUSIVA PARA EL EXCHANGE:
 - Manejo de errores para operaciones fallidas
 - Validación de parámetros antes de ejecutar órdenes
 - Uso de variables de entorno para credenciales sensibles
+
+## Demostración
+
+### Opción 1: GIF Animado
+![Demo del Bot](ruta/a/tu/demo.gif)
+
+### Opción 2: Video de YouTube
+[![Demo en YouTube](https://img.youtube.com/vi/ID_DEL_VIDEO/0.jpg)](https://www.youtube.com/watch?v=ID_DEL_VIDEO)
+
+### Opción 3: Video MP4 directo
+https://usuario.github.io/repositorio/ruta/al/video.mp4
 
 ## Advertencia
 

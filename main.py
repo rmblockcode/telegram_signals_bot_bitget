@@ -1,24 +1,26 @@
 import os
 from telethon import TelegramClient, events
 from datetime import datetime
+from dotenv import load_dotenv
 
 import bitget.v2.mix.order_api as max_order_api
 import bitget.v2.mix.account_api as max_account_api
 import bitget.v2.mix.market_api as max_market_api
 import bitget.bitget_api as baseApi
 
-# Replace with your credentials
-api_id = os.environ.get('TELEGRAM_API_ID')
-api_hash = os.environ.get('TELEGRAM_API_HASH')
-phone_number = os.environ.get('TELEGRAM_PHONE_NUMER')
+# Load environment variables from .env file
+load_dotenv()
 
-# channel_id = -1002239931115
-channel_id = int(os.environ.get('TELEGRAM_CHANNEL_ID'))
+# Get credentials from environment variables
+api_id = os.getenv('TELEGRAM_API_ID')
+api_hash = os.getenv('TELEGRAM_API_HASH')
+phone_number = os.getenv('TELEGRAM_PHONE_NUMER')
+channel_id = int(os.getenv('TELEGRAM_CHANNEL_ID'))
 
 # Bitget API credentials
-api_key = os.environ.get('BG_API_KEY')
-secret_key = os.environ.get('BG_SECRET_KEY')
-passphrase = os.environ.get('BG_PASSPHRASE')
+api_key = os.getenv('BG_API_KEY')
+secret_key = os.getenv('BG_SECRET_KEY')
+passphrase = os.getenv('BG_PASSPHRASE')
 
 # Risk parameter in percentage (e.g., 1% of the account balance)
 risk_percent = 20
