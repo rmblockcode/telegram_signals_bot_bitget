@@ -12,7 +12,7 @@ Bot de trading automatizado que ejecuta operaciones en Bitget basado en señales
 
 ## Requisitos Previos
 
-- Python 3.7+
+- Python 3.10+
 - Cuenta en Bitget
 - Cuenta de Telegram
 - API Key de Bitget con permisos de trading
@@ -113,14 +113,9 @@ SEÑAL EXCLUSIVA PARA EL EXCHANGE:
 
 ## Demostración
 
-### Opción 1: GIF Animado
-![Demo del Bot](ruta/a/tu/demo.gif)
-
-### Opción 2: Video de YouTube
+### Video de YouTube (TODO)
 [![Demo en YouTube](https://img.youtube.com/vi/ID_DEL_VIDEO/0.jpg)](https://www.youtube.com/watch?v=ID_DEL_VIDEO)
 
-### Opción 3: Video MP4 directo
-https://usuario.github.io/repositorio/ruta/al/video.mp4
 
 ## Advertencia
 
