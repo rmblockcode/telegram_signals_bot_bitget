@@ -46,16 +46,21 @@ pip install -r requirements.txt
 El proyecto utiliza python-dotenv para manejar las variables de entorno. Crea un archivo `.env` en la raíz del proyecto con el siguiente formato:
 
 ```bash
-export TELEGRAM_API_ID=<tu-api-id>
-export TELEGRAM_API_HASH=<tu-api-hash>
-export TELEGRAM_PHONE_NUMER=<tu-numero-telefono>
-export TELEGRAM_CHANNEL_ID=<id-del-canal>
-export BG_API_KEY=<tu-api-key>
-export BG_SECRET_KEY=<tu-secret-key>
-export BG_PASSPHRASE=<tu-passphrase>
-```
+# Telegram credentials
+TELEGRAM_API_ID=<tu-api-id>
+TELEGRAM_API_HASH=<tu-api-hash>
+TELEGRAM_PHONE_NUMER=<tu-numero-telefono>
+TELEGRAM_CHANNEL_ID=<id-del-canal>
 
-> Nota: El prefijo `export` es opcional pero recomendado ya que permite usar el mismo archivo tanto con python-dotenv como con el comando `source` en sistemas Unix/Linux/macOS.
+# Bitget API credentials
+BG_API_KEY=<tu-api-key>
+BG_SECRET_KEY=<tu-secret-key>
+BG_PASSPHRASE=<tu-passphrase>
+
+# Trading parameters
+RISK_PERCENT=20  # Porcentaje de riesgo por operación (default: 20)
+LEVERAGE=20      # Apalancamiento a utilizar (default: 20)
+```
 
 Las variables se cargarán automáticamente al ejecutar el script.
 

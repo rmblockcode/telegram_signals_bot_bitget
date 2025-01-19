@@ -22,9 +22,9 @@ api_key = os.getenv('BG_API_KEY')
 secret_key = os.getenv('BG_SECRET_KEY')
 passphrase = os.getenv('BG_PASSPHRASE')
 
-# Risk parameter in percentage (e.g., 1% of the account balance)
-risk_percent = 20
-leverage = "20"
+# Trading parameters
+risk_percent = float(os.getenv('RISK_PERCENT', 20))  # Default to 20 if not set
+leverage = os.getenv('LEVERAGE', 20)  # Default to 20 if not set
 
 # Thread ID del topic específico que quieres monitorear
 thread_id = None  # Reemplaza None con el ID del thread que quieres monitorear
