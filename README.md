@@ -21,16 +21,27 @@ Bot de trading automatizado que ejecuta operaciones en Bitget basado en señales
 
 1. Clonar el repositorio:
 ```bash
-git clone <url-del-repositorio>
-cd Bitget
+git clone https://github.com/rmblockcode/telegram_signals_bot_bitget.git
+cd telegram_signals_bot_bitget
 ```
 
-2. Instalar dependencias:
+2. Crear y activar entorno virtual:
+```bash
+# En Windows
+python -m venv venv
+.\venv\Scripts\activate
+
+# En macOS/Linux
+python3 -m venv venv
+source venv/bin/activate
+```
+
+3. Instalar dependencias:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Configurar variables de entorno:
+4. Configurar variables de entorno:
 Crear un archivo `.env` con las siguientes variables:
 ```env
 # Telegram Credentials
