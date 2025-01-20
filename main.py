@@ -26,103 +26,113 @@ passphrase = os.getenv('BG_PASSPHRASE')
 risk_percent = float(os.getenv('RISK_PERCENT', 20))  # Default to 20 if not set
 leverage = os.getenv('LEVERAGE', 20)  # Default to 20 if not set
 
-# Thread ID del topic específico que quieres monitorear
-thread_id = None  # Reemplaza None con el ID del thread que quieres monitorear
-
-# Initialize Telegram client
 client = TelegramClient('session_name', api_id, api_hash)
 
 max_order_api = max_order_api.OrderApi(api_key, secret_key, passphrase)
 account_api = max_account_api.AccountApi(api_key, secret_key, passphrase)
 market_api = max_market_api.MarketApi(api_key, secret_key, passphrase)
 
-
-async def main(): 
-    # Start the Telegram client session
+async def main():
     await client.start(phone_number)
-
-    # Listen for new messages in the specified group
+    
     @client.on(events.NewMessage(chats=channel_id))
     async def handler(event):
-        print('\n------------------------------------')
-        print(f'New Message at {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
-        message = event.message.message
-        print(message)
-        lines = message.splitlines()
-
-        print(lines[0])
-
-        if len(lines) > 1:
-            side = lines[2].strip()
-            symbol = lines[3].split(": ")[1].split(" ")[0].lower()
-            symbol = symbol[:-2] if symbol.endswith(".p") else symbol
-            print(side)
-            print(symbol)
-
-            try:
-                if 'Exit' in side:
-                    params = {}
-                    params["symbol"] = symbol
-                    params["productType"] = "USDT-FUTURES"
-
-                    response = max_order_api.closePositions(params)
-
-                else:
-                    # Let set leverage
-                    params = {}
-                    params["symbol"] = symbol
-                    params["productType"] = "USDT-FUTURES"
-                    params["marginCoin"] = "USDT"
-                    params["leverage"] = leverage
-
-                    response = account_api.setLeverage(params)
-
-                    params = {}
-                    params["symbol"] = symbol
-                    params["productType"] = "USDT-FUTURES"
-                    params["marginCoin"] = "USDT"
+        try:
+            # Verificar si el mensaje es del topic específico
+            is_bot = True
+            if hasattr(event.message, 'reply_to') and event.message.reply_to:
+                is_bot = False
             
-                    response = account_api.account(params)
+            if not is_bot:
+                print(f"Ignorando mensaje de otro topic")
+                return
 
-                    balance = float(response.get("data").get("crossedMaxAvailable"))
+            print('\n------------------------------------')
+            print(f'Nuevo mensaje recibido a las {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+            message = event.message.message
+            print("Contenido del mensaje:")
+            print(message)
+            
+            lines = message.splitlines()
+            
+            if len(lines) > 1:
+                side = lines[2].strip()
+                symbol = lines[3].split(": ")[1].split(" ")[0].lower()
+                symbol = symbol[:-2] if symbol.endswith(".p") else symbol
+                print(f"Side: {side}")
+                print(f"Symbol: {symbol}")
 
-                    # Getting market price
-                    params = {}
-                    params["symbol"] = symbol
-                    params["productType"] = "USDT-FUTURES"
-                    response = market_api.market_price(params)
+                try:
+                    if 'Exit' in side:
+                        params = {}
+                        params["symbol"] = symbol
+                        params["productType"] = "USDT-FUTURES"
+                        print("\nCerrando posición...")
+                        response = max_order_api.closePositions(params)
+                        print("Respuesta del cierre:", response)
 
-                    # print(response)
-                    mark_price = float(response.get("data")[0].get("markPrice"))
-
-                    position_size = ((balance * risk_percent / 100) / mark_price) * float(leverage)
-
-                    params = {}
-
-                    if side == "long":
-                        params["side"] = "buy"
                     else:
-                        params["side"] = "sell"
+                        # Configurar apalancamiento
+                        params = {}
+                        params["symbol"] = symbol
+                        params["productType"] = "USDT-FUTURES"
+                        params["marginCoin"] = "USDT"
+                        params["leverage"] = leverage
 
-                    print('position_size', position_size)
-                    params["symbol"] = symbol
-                    params["productType"] = "USDT-FUTURES"
-                    params["marginMode"] = "crossed"
-                    params["marginCoin"] = "USDT"
-                    params["orderType"] = "market"
-                    params["tradeSide"] = "open"
-                    # params["price"] = "27012"
-                    params["size"] = position_size
-                    print(params)
-                    response = max_order_api.placeOrder(params)
-                    print(response)
+                        print("\nConfigurando apalancamiento...")
+                        response = account_api.setLeverage(params)
+                        print("Respuesta de apalancamiento:", response)
 
-            except Exception as e:
-                print("error:" + e.message)
+                        # Obtener información de la cuenta
+                        params = {}
+                        params["symbol"] = symbol
+                        params["productType"] = "USDT-FUTURES"
+                        params["marginCoin"] = "USDT"
+                
+                        print("\nObteniendo balance disponible...")
+                        response = account_api.account(params)
+                        balance = float(response.get("data").get("crossedMaxAvailable"))
+                        print(f"Balance disponible: {balance} USDT")
 
-    print("Listening for messages...")
+                        # Obtener precio de mercado
+                        params = {}
+                        params["symbol"] = symbol
+                        params["productType"] = "USDT-FUTURES"
+                        
+                        print("\nObteniendo precio de mercado...")
+                        response = market_api.market_price(params)
+                        mark_price = float(response.get("data")[0].get("markPrice"))
+                        print(f"Precio de mercado: {mark_price}")
+
+                        # Calcular tamaño de la posición
+                        position_size = ((balance * risk_percent / 100) / mark_price) * float(leverage)
+
+                        # Preparar orden
+                        params = {}
+                        params["side"] = "buy" if side == "long" else "sell"
+                        params["symbol"] = symbol
+                        params["productType"] = "USDT-FUTURES"
+                        params["marginMode"] = "crossed"
+                        params["marginCoin"] = "USDT"
+                        params["orderType"] = "market"
+                        params["tradeSide"] = "open"
+                        params["size"] = position_size
+
+                        print("\nPreparando orden:")
+                        print(f"Tamaño de la posición: {position_size}")
+                        print("Parámetros de la orden:", params)
+                        
+                        response = max_order_api.placeOrder(params)
+                        print("Respuesta de la orden:", response)
+
+                except Exception as e:
+                    print(f"\nError en la operación: {str(e)}")
+
+        except Exception as e:
+            print(f"\nError procesando el mensaje: {str(e)}")
+
+    print("\nBot iniciado. Escuchando mensajes...")
     await client.run_until_disconnected()
-
 
 with client:
     client.loop.run_until_complete(main())
