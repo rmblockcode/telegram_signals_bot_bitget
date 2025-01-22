@@ -25,6 +25,7 @@ passphrase = os.getenv('BG_PASSPHRASE')
 # Trading parameters
 risk_percent = float(os.getenv('RISK_PERCENT', 20))  # Default to 20 if not set
 leverage = os.getenv('LEVERAGE', 20)  # Default to 20 if not set
+sl_percent = float(os.getenv('SL_PERCENT', 0.75))
 
 client = TelegramClient('session_name', api_id, api_hash)
 
@@ -32,12 +33,17 @@ max_order_api = max_order_api.OrderApi(api_key, secret_key, passphrase)
 account_api = max_account_api.AccountApi(api_key, secret_key, passphrase)
 market_api = max_market_api.MarketApi(api_key, secret_key, passphrase)
 
+
 async def main():
     await client.start(phone_number)
+
+    can_operate = True
     
     @client.on(events.NewMessage(chats=channel_id))
     async def handler(event):
         try:
+            nonlocal can_operate
+
             # Verificar si el mensaje es del topic específico
             is_bot = True
             if hasattr(event.message, 'reply_to') and event.message.reply_to:
@@ -68,62 +74,83 @@ async def main():
                         params["symbol"] = symbol
                         params["productType"] = "USDT-FUTURES"
                         print("\nCerrando posición...")
+                        can_operate = True
                         response = max_order_api.closePositions(params)
-                        print("Respuesta del cierre:", response)
 
                     else:
-                        # Configurar apalancamiento
-                        params = {}
-                        params["symbol"] = symbol
-                        params["productType"] = "USDT-FUTURES"
-                        params["marginCoin"] = "USDT"
-                        params["leverage"] = leverage
 
-                        print("\nConfigurando apalancamiento...")
-                        response = account_api.setLeverage(params)
-                        print("Respuesta de apalancamiento:", response)
+                        if can_operate:
+                            position_side = "buy" if side == "long" else "sell"
+                            # Configurar apalancamiento
+                            params = {}
+                            params["symbol"] = symbol
+                            params["productType"] = "USDT-FUTURES"
+                            params["marginCoin"] = "USDT"
+                            params["leverage"] = leverage
 
-                        # Obtener información de la cuenta
-                        params = {}
-                        params["symbol"] = symbol
-                        params["productType"] = "USDT-FUTURES"
-                        params["marginCoin"] = "USDT"
-                
-                        print("\nObteniendo balance disponible...")
-                        response = account_api.account(params)
-                        balance = float(response.get("data").get("crossedMaxAvailable"))
-                        print(f"Balance disponible: {balance} USDT")
+                            print("\nConfigurando apalancamiento...")
+                            response = account_api.setLeverage(params)
+                            print("Respuesta de apalancamiento:", response)
 
-                        # Obtener precio de mercado
-                        params = {}
-                        params["symbol"] = symbol
-                        params["productType"] = "USDT-FUTURES"
-                        
-                        print("\nObteniendo precio de mercado...")
-                        response = market_api.market_price(params)
-                        mark_price = float(response.get("data")[0].get("markPrice"))
-                        print(f"Precio de mercado: {mark_price}")
+                            # Obtener información de la cuenta
+                            params = {}
+                            params["symbol"] = symbol
+                            params["productType"] = "USDT-FUTURES"
+                            params["marginCoin"] = "USDT"
+                    
+                            print("\nObteniendo balance disponible...")
+                            response = account_api.account(params)
+                            balance = float(response.get("data").get("crossedMaxAvailable"))
+                            print(f"Balance disponible: {balance} USDT")
 
-                        # Calcular tamaño de la posición
-                        position_size = ((balance * risk_percent / 100) / mark_price) * float(leverage)
+                            # Obtener precio de mercado
+                            params = {}
+                            params["symbol"] = symbol
+                            params["productType"] = "USDT-FUTURES"
+                            
+                            print("\nObteniendo precio de mercado...")
+                            response = market_api.market_price(params)
+                            mark_price = float(response.get("data")[0].get("markPrice"))
+                            print(f"Precio de mercado: {mark_price}")
 
-                        # Preparar orden
-                        params = {}
-                        params["side"] = "buy" if side == "long" else "sell"
-                        params["symbol"] = symbol
-                        params["productType"] = "USDT-FUTURES"
-                        params["marginMode"] = "crossed"
-                        params["marginCoin"] = "USDT"
-                        params["orderType"] = "market"
-                        params["tradeSide"] = "open"
-                        params["size"] = position_size
+                            # Calcular tamaño de la posición
+                            position_size = ((balance * risk_percent / 100) / mark_price) * float(leverage)
 
-                        print("\nPreparando orden:")
-                        print(f"Tamaño de la posición: {position_size}")
-                        print("Parámetros de la orden:", params)
-                        
-                        response = max_order_api.placeOrder(params)
-                        print("Respuesta de la orden:", response)
+                            sl_distance = mark_price * (sl_percent/100)
+                            
+                            stop_loss_price = mark_price - sl_distance if position_side == "buy" else mark_price + sl_distance
+
+                            print("\nObteniendo multiplier...")
+                            params = {}
+                            params["symbol"] = symbol
+                            params["productType"] = "USDT-FUTURES"
+                            response = market_api.contracts(params)
+                            multiplier = float(response.get("data")[0].get("sizeMultiplier"))
+
+                            stop_loss_price = round(stop_loss_price / multiplier) * multiplier
+
+                            # Preparar orden
+                            params = {}
+                            params["side"] = position_side
+                            params["symbol"] = symbol
+                            params["productType"] = "USDT-FUTURES"
+                            params["marginMode"] = "crossed"
+                            params["marginCoin"] = "USDT"
+                            params["orderType"] = "market"
+                            params["tradeSide"] = "open"
+                            params["size"] = position_size
+                            params["presetStopLossPrice"] = str(stop_loss_price)
+
+                            print("\nPreparando orden:")
+                            print(f"Tamaño de la posición: {position_size}")
+                            print("Parámetros de la orden:", params)
+                            
+                            response = max_order_api.placeOrder(params)
+                            print("Respuesta de la orden:", response)
+
+                            can_operate = False
+                        else:
+                            print('Ya hay operación abierta')
 
                 except Exception as e:
                     print(f"\nError en la operación: {str(e)}")

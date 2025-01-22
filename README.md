@@ -60,6 +60,7 @@ BG_PASSPHRASE=<tu-passphrase>
 # Trading parameters
 RISK_PERCENT=20  # Porcentaje de riesgo por operación (default: 20)
 LEVERAGE=20      # Apalancamiento a utilizar (default: 20)
+SL_PERCENT=0.75  # Porcentaje de distancia para el SL
 ```
 
 Las variables se cargarán automáticamente al ejecutar el script.
